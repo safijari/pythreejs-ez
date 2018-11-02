@@ -1,11 +1,15 @@
 from pythreejs import *
+import pythreejs as THREE
 import pythreejs as pjs
 import numpy as np
 
 
-def create_threejs_scene(view_width=400, view_height=1200, add_lights=True):
+def create_threejs_scene(view_width=400,
+                         view_height=1200,
+                         add_lights=True,
+                         cam_position=(0, 0, 0)):
     camera = pjs.CombinedCamera(
-        position=[0, 0, 1], width=view_width, height=view_height)
+        position=cam_position, width=view_width, height=view_height)
     camera.up = (0, 0, 1)
     grid_helper = pjs.GridHelper(
         1, 10, colorCenterLine="#000000", colorGrid="#000000")
@@ -69,7 +73,11 @@ def create_point_cloud_with_per_point_color(x, y, z, r, g, b, point_size=0.01):
     return pointCloud
 
 
-def create_point_cloud_with_single_color(x, y, z, point_size=0.1, color="#FFFFFF"):
+def create_point_cloud_with_single_color(x,
+                                         y,
+                                         z,
+                                         point_size=0.1,
+                                         color="#FFFFFF"):
     if isinstance(z, type(None)):
         z = y.copy()
         z[:] = 0
@@ -79,3 +87,51 @@ def create_point_cloud_with_single_color(x, y, z, point_size=0.1, color="#FFFFFF
     material = pjs.PointsMaterial(point_size=point_size, color=color)
     pointCloud = pjs.Points(geometry=geometry, material=material)
     return pointCloud
+
+
+morph = BufferGeometry.from_geometry(PlaneGeometry(1, 1))
+
+
+def create_textured_plane(corners, image, morph):
+    # corners is [(x, y, z), ...]
+    # which is upper left, upper right, lower left, lower right
+    top_left, top_right, bot_left, bot_right = corners
+
+    rgb_image = image[:, :, ::-1]
+
+    data_tex = DataTexture(data=rgb_image, format="RGBFormat")
+    material = THREE.MeshBasicMaterial(map=data_tex)
+
+    vertices_arr = morph.attributes['position'].array.copy()
+
+    vertices_arr[0] = top_left
+    vertices_arr[1] = bot_left
+    vertices_arr[2] = top_right
+    vertices_arr[3] = bot_left
+    vertices_arr[4] = bot_right
+    vertices_arr[5] = top_right
+
+    vertices = BufferAttribute(vertices_arr)
+    morph.attributes.update({'position': vertices})
+    geometry = BufferGeometry(attributes=morph.attributes, )
+
+    plane = Mesh(geometry, material)
+    plane.material.side = 'DoubleSide'
+    plane.material.transparent = True
+    plane.material.opacity = 0.5
+
+    return plane
+
+
+def create_line_between_two_points(p1, p2, color='red', width=5):
+    linesgeom = Geometry(
+        vertices=[[p1[0], p1[1], p1[2]], [p2[0], p2[1], p2[2]]],
+        colors=[color, color])
+
+    lines = Line(
+        geometry=linesgeom,
+        material=LineBasicMaterial(
+            linewidth=width, vertexColors='VertexColors'),
+        type='LinePieces')
+
+    return lines
