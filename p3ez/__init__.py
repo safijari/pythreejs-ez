@@ -1,13 +1,13 @@
-from pythreejs import *
 import pythreejs as THREE
 import pythreejs as pjs
+from pythreejs import *
 import numpy as np
 
 
 def create_threejs_scene(view_width=400,
                          view_height=1200,
                          add_lights=True,
-                         cam_position=(0, 0, 0)):
+                         cam_position=(0, 1, 1)):
     camera = pjs.CombinedCamera(
         position=cam_position, width=view_width, height=view_height)
     camera.up = (0, 0, 1)
@@ -40,7 +40,7 @@ def create_axis_with_center_sphere(pos,
     helper.quaternion = tuple(quat)
     sm = pjs.SpriteMaterial(
         map=pjs.TextTexture(
-            string=text, color='black', size=100, squareTexture=False))
+            string=text, color='white', size=100, squareTexture=False))
     sc = 0.025
     label = pjs.Sprite(
         material=sm,
@@ -84,7 +84,7 @@ def create_point_cloud_with_single_color(x,
     ptsCoord = np.vstack((x, y, z)).astype(np.float32).T
     pts = pjs.BufferAttribute(array=ptsCoord)
     geometry = pjs.BufferGeometry(attributes={'position': pts})
-    material = pjs.PointsMaterial(point_size=point_size, color=color)
+    material = pjs.PointsMaterial(size=point_size, color=color)
     pointCloud = pjs.Points(geometry=geometry, material=material)
     return pointCloud
 
@@ -135,3 +135,18 @@ def create_line_between_two_points(p1, p2, color='red', width=5):
         type='LinePieces')
 
     return lines
+
+
+def create_tf_tree_viz(tree, parent_name_, skip_substrs=['optical', 'target'], text=''):
+    parent_name = tree.get_parent().name if not parent_name_ else parent_name_
+    out = []
+    for node in tree.nodes.values():
+        skip = False
+        for ss in skip_substrs:
+            if ss in node.name:
+                skip = True
+        if skip:
+            continue
+        x = tree.lookup_transform(node.name, parent_name)
+        out.extend(create_axis_with_center_sphere(x.position, x.quaternion, text=text))
+    return out
