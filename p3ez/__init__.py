@@ -5,7 +5,7 @@ import numpy as np
 
 
 def create_threejs_scene(view_width=400,
-                         view_height=1200,
+                         view_height=400,
                          add_lights=True,
                          cam_position=(0, 1, 1)):
     camera = pjs.CombinedCamera(
@@ -40,7 +40,7 @@ def create_axis_with_center_sphere(pos,
     helper.quaternion = tuple(quat)
     sm = pjs.SpriteMaterial(
         map=pjs.TextTexture(
-            string=text, color='white', size=100, squareTexture=False))
+            string=text, color='black', size=100, squareTexture=False))
     sc = 0.025
     label = pjs.Sprite(
         material=sm,
